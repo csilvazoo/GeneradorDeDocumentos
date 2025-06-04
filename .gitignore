@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.env
+.env
+
+# VSCode
+.vscode/
+
+# PyInstaller
+build/
+dist/
+*.spec
+
+# Ejecutables y drivers
+*.exe
+msedgedriver.exe
+
+# Archivos temporales
+*.log
+*.tmp
+
+# Archivos de Word generados
+*.docx
+
+# Otros
+.DS_Store
+Thumbs.db
