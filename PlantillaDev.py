@@ -9,6 +9,8 @@ import os
 import getpass
 from tkinter import filedialog
 
+log_queue = queue.Queue()
+
 def run_script(numero_funcionalidad, ver_explorador, log_queue, docx_path):
     import re
     import os
@@ -123,7 +125,7 @@ def run_script(numero_funcionalidad, ver_explorador, log_queue, docx_path):
             driver.execute_script(f"window.open('{req_url}', '_blank');")
             driver.switch_to.window(driver.window_handles[-1])
             log(f"Requerimiento {nro} abierto en nueva pestaña.")
-            time.sleep(5)
+            time.sleep(7)
             html_req = driver.page_source
             soup = BeautifulSoup(html_req, 'html.parser')
             try:
@@ -136,7 +138,7 @@ def run_script(numero_funcionalidad, ver_explorador, log_queue, docx_path):
             except Exception as e:
                 log(f"No se pudo cambiar al iframe del requerimiento: {e}")
                 soup = BeautifulSoup(html_req, 'html.parser')
-            finally:
+            finally:              
                 driver.switch_to.default_content()
             campos = {
                 'Fecha alta': '',
@@ -420,7 +422,7 @@ def run_script(numero_funcionalidad, ver_explorador, log_queue, docx_path):
 def main():
     root = tk.Tk()
     root.title("Generador de Documentos Funcionales")
-    root.geometry("600x300")
+    root.geometry("600x220")
     frm = ttk.Frame(root, padding=20)
     frm.pack(fill=tk.BOTH, expand=True)
     ttk.Label(frm, text="Funcionalidad:").grid(row=0, column=0, sticky=tk.W)
@@ -432,7 +434,7 @@ def main():
     chk.grid(row=1, column=0, columnspan=2, sticky=tk.W)
     # Guardar como debajo de ver explorador
     user_documents = os.path.join(os.path.expanduser('~'), 'Documents')
-    ruta_var = tk.StringVar(value=os.path.join(user_documents, "requerimientos_v3.docx"))
+    ruta_var = tk.StringVar(value=os.path.join(user_documents, "Funcionalidad.docx"))
     ttk.Label(frm, text="Guardar como:").grid(row=2, column=0, sticky=tk.W)
     entry_ruta = ttk.Entry(frm, textvariable=ruta_var, width=65)
     entry_ruta.grid(row=2, column=1, sticky=tk.W, columnspan=1)
@@ -441,7 +443,7 @@ def main():
             defaultextension=".docx",
             filetypes=[("Documentos Word", "*.docx")],
             initialdir=user_documents,
-            initialfile="requerimientos_v3.docx",
+            initialfile="Funcionalidad.docx",
             title="Guardar documento como"
         )
         if ruta:
@@ -449,46 +451,59 @@ def main():
     btn_examinar = ttk.Button(frm, text="Examinar...", command=seleccionar_ruta)
     btn_examinar.grid(row=2, column=1, sticky=tk.E)
     btn = ttk.Button(frm, text="Generar Documento")
-    btn.grid(row=3, column=0, columnspan=2, pady=10)
+    btn.grid(row=3, column=0, pady=10, sticky=tk.W)
+    open_btn = ttk.Button(frm, text="Abrir Documento", state="disabled")
+    open_btn.grid(row=3, column=1, pady=10, sticky=tk.E)
+    
+    def abrir_doc():
+        ruta_docx = ruta_var.get()
+        if os.path.exists(ruta_docx):
+            try:
+                os.startfile(ruta_docx)
+            except Exception as e:
+                messagebox.showerror("Error", f"No se pudo abrir el documento:\n{e}")
+        else:
+            messagebox.showerror("Error", "El archivo no existe en la ruta seleccionada.")
+    open_btn.config(command=abrir_doc)
+
     progress = ttk.Progressbar(frm, mode="indeterminate")
     progress.grid(row=4, column=0, columnspan=2, sticky="ew", pady=5)
     status_label = ttk.Label(frm, text="", foreground="blue")
     status_label.grid(row=5, column=0, columnspan=2, pady=(0,5))
+    # Label de éxito/error y botón abrir documento (más compactos)
+    success_label = ttk.Label(frm, text="", foreground="green")
+    success_label.grid(row=8, column=0, columnspan=2, pady=(5,0))
     ttk.Label(frm, text="Detalle de ejecución:").grid(row=5, column=0, columnspan=2, sticky=tk.W)
-    txt_log = ScrolledText(frm, height=15, width=70, state="disabled")
-    txt_log.grid(row=9, column=0, columnspan=2, sticky="nsew")
-    txt_log.grid_remove()
-    frm.rowconfigure(9, weight=1)
+    # --- Detalle de ejecución (área de log) ---
+    from tkinter.scrolledtext import ScrolledText
+
+    # Label para el título del log
+    log_label = ttk.Label(frm, text="Detalle de ejecución:")
+    log_label.grid(row=5, column=0, columnspan=2, sticky=tk.W)
+
+    # Área de log (ScrolledText)
+    txt_log = ScrolledText(frm, height=15, width=100, state="disabled", bg="#ffffff", bd=0, highlightthickness=0)
+    txt_log.grid(row=7, column=0, columnspan=2, sticky="nsew", pady=(0,10))
+    txt_log.grid_remove()  # Oculto por defecto
+
+    # Permitir expansión del área de log al redimensionar la ventana
+    frm.rowconfigure(7, weight=1)
     frm.columnconfigure(1, weight=1)
-    # Botón para mostrar/ocultar log debajo de la leyenda
+
+    # Botón para mostrar/ocultar el log
     def toggle_log():
         if txt_log.winfo_viewable():
             txt_log.grid_remove()
             ver_detalle_btn.config(text="Ver detalle")
-            root.geometry("600x250")
+            root.geometry("600x220")
         else:
-            txt_log.grid()
+            txt_log.grid(row=7, column=0, columnspan=2, sticky="nsew", pady=(0,10))
             ver_detalle_btn.config(text="Ocultar detalle")
             root.geometry("600x400")
     ver_detalle_btn = ttk.Button(frm, text="Ver detalle", command=toggle_log)
     ver_detalle_btn.grid(row=6, column=0, columnspan=2, pady=(0,10))
-    # Label de éxito/error y botón abrir documento (más compactos)
-    success_label = ttk.Label(frm, text="", foreground="green")
-    success_label.grid(row=7, column=0, columnspan=2, pady=(5,0))
-    open_btn = ttk.Button(frm, text="Abrir Documento", state="disabled")
-    open_btn.grid(row=8, column=0, columnspan=2, pady=(0,5))
-    def abrir_doc():
-        try:
-            os.startfile(ruta_var.get())
-        except Exception as e:
-            messagebox.showerror("Error", f"No se pudo abrir el documento: {e}")
-    open_btn.config(command=abrir_doc)
-    # Log oculto por defecto
-    txt_log.grid(row=9, column=0, columnspan=2, sticky="nsew")
-    txt_log.grid_remove()
-    frm.rowconfigure(9, weight=1)
-    frm.columnconfigure(1, weight=1)
-    log_queue = queue.Queue()
+
+    # Función para actualizar el log en tiempo real
     def update_log():
         while not log_queue.empty():
             msg = log_queue.get_nowait()
@@ -511,8 +526,8 @@ def main():
         txt_log.configure(state="disabled")
         success_label.config(text="", foreground="green")
         open_btn.config(state="disabled")
-        status_label.config(text="Generando Documento")
-        root.geometry("600x320")
+        status_label.config(text="Generando Documento", foreground="blue")
+        root.geometry("600x220")
         ruta_docx = ruta_var.get()
         def limpiar_label():
             success_label.config(text="")
@@ -520,7 +535,6 @@ def main():
             run_script(num, ver_explorador_var.get(), log_queue, ruta_docx)
             progress.stop()
             btn.config(state="normal")
-            status_label.config(text="")
             log_content = ""
             try:
                 with log_queue.mutex:
@@ -529,17 +543,19 @@ def main():
                 pass
             if not log_content:
                 log_content = txt_log.get("1.0", tk.END)
+            # Al finalizar, ocultar "Generando Documento" y mostrar resultado en status_label
+            status_label.config(text="")
             if os.path.exists(ruta_docx) and "No existe funcionalidad o no tiene requerimientos asociados." not in log_content:
-                success_label.config(text="Documento generado exitosamente.", foreground="green")
+                status_label.config(text="Documento generado exitosamente.", foreground="green")
                 open_btn.config(state="normal")
             else:
-                success_label.config(text="Documento NO generado.", foreground="red")
+                status_label.config(text="Documento NO generado.", foreground="red")
                 open_btn.config(state="disabled")
-                root.after(5000, limpiar_label)
+                root.after(5000, lambda: status_label.config(text=""))
         threading.Thread(target=task, daemon=True).start()
     btn.config(command=on_run)
     # Ventana compacta al inicio
-    root.geometry("600x320")
+    root.geometry("600x220")
     root.mainloop()
 
 if __name__ == "__main__":
