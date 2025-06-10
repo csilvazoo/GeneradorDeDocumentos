@@ -41,7 +41,7 @@ NOTA: Para tener acceso a la intranet se hace desde una PC dentro de la red de Z
 - `msedgedriver.exe`: Driver de Edge necesario para Selenium (debe estar en la misma carpeta que el script).
 - `plantillaAFU2505.docx`: Plantilla Word base sobre la que se insertan los datos extraídos.
 - `Zoo.ico`: Ícono personalizado para el ejecutable.
-- `requerimientos_v3.docx`: Archivo Word generado como resultado.
+- `Funcionalidad.docx`: Archivo Word generado como resultado.
 
 ## Descripción de la lógica y tecnologías
 
