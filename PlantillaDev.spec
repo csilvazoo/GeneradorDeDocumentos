@@ -5,7 +5,7 @@ a = Analysis(
     ['PlantillaDev.py'],
     pathex=[],
     binaries=[],
-    datas=[('plantillaAFU2505.docx', '.'), ('msedgedriver.exe', '.')],
+    datas=[('msedgedriver.exe', '.'), ('plantillaAFU2505.docx', '.')],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},
