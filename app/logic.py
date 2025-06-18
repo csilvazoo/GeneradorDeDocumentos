@@ -48,7 +48,8 @@ def run_script(numero_funcionalidad, ver_explorador, log_queue, docx_path):
         log("Página cargada correctamente.")
         time.sleep(3)
         # Uso de helper para cambiar al iframe del reporte
-        cambiar_iframe(driver, By.TAG_NAME, "iframe", log)
+        cambiar_iframe(driver, By.TAG_NAME, "iframe")
+        log("Cambiado al iframe del reporte.")
         input_funcionalidad = WebDriverWait(driver, 30).until(
             EC.visibility_of_element_located((By.ID, "ReportViewerControl_ctl04_ctl03_txtValue"))
         )
@@ -111,7 +112,7 @@ def run_script(numero_funcionalidad, ver_explorador, log_queue, docx_path):
         last_paragraph = req_paragraph
         for idx, nro in enumerate(requerimiento_nros):
             req_url = requerimiento_links[idx]
-            abrir_pestania(driver, req_url, log)
+            abrir_pestania(driver, req_url, log, nro_req=nro)
             campos, documento_num, documento_link, incidente_num, incidente_link = extraer_requerimiento(driver, req_url, log)
             p = insert_paragraph_after(last_paragraph, f"Requerimiento nro.{nro}", style="toa heading")
             p = insert_paragraph_after(p, f"Fecha alta: {campos['Fecha alta']}", style="List Bullet")
@@ -157,7 +158,10 @@ def run_script(numero_funcionalidad, ver_explorador, log_queue, docx_path):
         # Cambiar a la ventana principal y al iframe usando helper
         driver.switch_to.window(driver.window_handles[0])
         driver.switch_to.default_content()
-        cambiar_iframe(driver, By.TAG_NAME, "iframe", log)
+        cambiar_iframe(driver, By.TAG_NAME, "iframe")
+        log("No hay más requerimientos asociados.")
+        time.sleep(2)
+        log("Cambiado al iframe de la funcionalidad.")
         # --- EXTRACCIÓN DE DATOS DE FUNCIONALIDAD MODULARIZADA ---
         html_func = driver.page_source
         campos_func = extraer_funcionalidad(html_func, numero_funcionalidad)

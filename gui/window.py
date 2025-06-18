@@ -5,6 +5,11 @@ import threading
 import os
 import queue
 from app.logic import run_script
+from app.update_requerimientos import update_requerimientos
+from selenium import webdriver
+from selenium.webdriver.edge.options import Options
+from selenium.webdriver.edge.service import Service as EdgeService
+import sys
 
 def main():
     log_queue = queue.Queue()
@@ -36,11 +41,20 @@ def main():
         if ruta:
             ruta_var.set(ruta)
     btn_examinar = ttk.Button(frm, text="Examinar...", command=seleccionar_ruta)
-    btn_examinar.grid(row=2, column=1, sticky=tk.E)
-    btn = ttk.Button(frm, text="Generar Documento")
-    btn.grid(row=3, column=0, pady=10, sticky=tk.W)
-    open_btn = ttk.Button(frm, text="Abrir Documento", state="disabled")
-    open_btn.grid(row=3, column=1, pady=10, sticky=tk.E)
+    btn_examinar.grid(row=2, column=1, sticky=tk.E, padx=(0,0))
+    # Centrar y distribuir los botones: Generar a la izquierda, Actualizar al centro, Abrir a la derecha
+    btns_frame = ttk.Frame(frm)
+    btns_frame.grid(row=3, column=0, columnspan=3, pady=10, sticky="ew")
+    btns_frame.columnconfigure(0, weight=1)
+    btns_frame.columnconfigure(1, weight=1)
+    btns_frame.columnconfigure(2, weight=1)
+    btn = ttk.Button(btns_frame, text="Generar Documento")
+    btn.grid(row=0, column=0, sticky="w")
+    btn_update = ttk.Button(btns_frame, text="Actualizar Documento", command=lambda: on_update())
+    btn_update.grid(row=0, column=1)
+    open_btn = ttk.Button(btns_frame, text="Abrir Documento", state="disabled")
+    open_btn.grid(row=0, column=2, sticky="e")
+
     def abrir_doc():
         ruta_docx = ruta_var.get()
         if os.path.exists(ruta_docx):
@@ -125,4 +139,70 @@ def main():
         threading.Thread(target=task, daemon=True).start()
     btn.config(command=on_run)
     root.geometry("600x220")
+
+    def on_update():
+        num = funcionalidad_var.get().strip()
+        if not num.isdigit():
+            messagebox.showerror("Error", "Ingrese un número de funcionalidad válido.")
+            return
+        ruta_docx = filedialog.askopenfilename(
+            defaultextension=".docx",
+            filetypes=[("Documentos Word", "*.docx")],
+            initialdir=user_documents,
+            title="Seleccionar documento a actualizar"
+        )
+        if not ruta_docx:
+            return
+        # Confirmación antes de actualizar
+        resp = messagebox.askyesno("Confirmar actualización", f"¿Está seguro que desea actualizar el documento?\n\n{ruta_docx}")
+        if not resp:
+            return
+        # Actualizar la ruta del 'guardar como' para que el botón 'Abrir Documento' funcione correctamente
+        ruta_var.set(ruta_docx)
+        btn_update.config(state="disabled")
+        progress.start()
+        txt_log.configure(state="normal")
+        txt_log.delete(1.0, tk.END)
+        txt_log.configure(state="disabled")
+        success_label.config(text="", foreground="green")
+        open_btn.config(state="disabled")
+        status_label.config(text="Actualizando Documento", foreground="blue")
+        root.geometry("600x220")
+        def task():
+            options = Options()
+            options.add_argument("--start-maximized")
+            if not ver_explorador_var.get():
+                options.add_argument("--headless")
+            if getattr(sys, 'frozen', False):
+                driver_path = os.path.join(sys._MEIPASS, "msedgedriver.exe")
+            else:
+                driver_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "msedgedriver.exe")
+            service = EdgeService(driver_path)
+            driver = webdriver.Edge(service=service, options=options)
+            try:
+                update_requerimientos(num, ruta_docx, driver, log_queue)
+            except Exception as e:
+                log_queue.put(f"ERROR: {e}")
+            finally:
+                driver.quit()
+                progress.stop()
+                btn_update.config(state="normal")
+                log_content = ""
+                try:
+                    with log_queue.mutex:
+                        log_content = "\n".join(list(log_queue.queue))
+                except Exception:
+                    pass
+                if not log_content:
+                    log_content = txt_log.get("1.0", tk.END)
+                status_label.config(text="")
+                if os.path.exists(ruta_docx) and "No hay nuevos requerimientos para agregar" not in log_content:
+                    status_label.config(text="Documento actualizado exitosamente.", foreground="green")
+                    open_btn.config(state="normal")
+                else:
+                    status_label.config(text="Documento NO actualizado.", foreground="red")
+                    open_btn.config(state="disabled")
+                    root.after(5000, lambda: status_label.config(text=""))
+        threading.Thread(target=task, daemon=True).start()
+
     root.mainloop()

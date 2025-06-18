@@ -13,9 +13,12 @@ def cambiar_iframe(driver, by, value, log=None):
             log(f"No se pudo cambiar al iframe: {e}")
         return False
 
-def abrir_pestania(driver, url, log=None):
+def abrir_pestania(driver, url, log=None, nro_req=None):
     driver.execute_script(f"window.open('{url}', '_blank');")
     driver.switch_to.window(driver.window_handles[-1])
     if log:
-        log(f"Abierta nueva pestaña: {url}")
+        if nro_req:
+            log(f"Requerimiento {nro_req} abierto en nueva pestaña.")
+        else:
+            log(f"Requerimiento abierto en nueva pestaña: {url}")
     time.sleep(2)

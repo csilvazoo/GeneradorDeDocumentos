@@ -89,7 +89,7 @@ pyinstaller --onefile --icon=resources/icons/Zoo.ico --add-data "msedgedriver.ex
 6. Visualizar el progreso y los logs.
 7. Abrir el documento generado desde la misma interfaz.
 
-![1749044579249](image/README/1749044579249.png)
+![1749044579249](resources/images/1749044579249.png)
 
 ---
 
