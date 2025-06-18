@@ -40,6 +40,7 @@ NOTA: Para tener acceso a la intranet se hace desde una PC dentro de la red de Z
 - `PlantillaDev.py`: Script principal con la interfaz gráfica y la lógica de extracción y generación de documentos.
 - `msedgedriver.exe`: Driver de Edge necesario para Selenium (debe estar en la misma carpeta que el script).
 - `plantillaAFU2505.docx`: Plantilla Word base sobre la que se insertan los datos extraídos.
+- `resources/templates/plantillaAFU2505.docx`: Plantilla Word base sobre la que se insertan los datos extraídos.
 - `Zoo.ico`: Ícono personalizado para el ejecutable.
 - `Funcionalidad.docx`: Archivo Word generado como resultado.
 
@@ -72,7 +73,7 @@ NOTA: Para tener acceso a la intranet se hace desde una PC dentro de la red de Z
 - Comando utilizado:
 
 ```powershell
-pyinstaller --onefile --icon=Zoo.ico --add-data "msedgedriver.exe;." --add-data "plantillaAFU2505.docx;." PlantillaDev.py
+pyinstaller --onefile --icon=resources/icons/Zoo.ico --add-data "msedgedriver.exe;." --add-data "resources/templates/plantillaAFU2505.docx;resources/templates" PlantillaDev.py
 ```
 
 - El parámetro `--add-data` asegura que los archivos necesarios se incluyan en el ejecutable.
@@ -94,6 +95,7 @@ pyinstaller --onefile --icon=Zoo.ico --add-data "msedgedriver.exe;." --add-data 
 
 ## Notas adicionales
 
+- La App es la versión 1.
 - El driver de Edge debe ser compatible con la versión instalada de Microsoft Edge.
 - Si se distribuye como .exe, todos los archivos necesarios deben estar en la misma carpeta o ser incluidos con PyInstaller.
 - La aplicación está lista para ser utilizada en cualquier PC con Windows y Microsoft Edge instalado.
