@@ -68,9 +68,16 @@ def update_requerimientos(numero_funcionalidad, docx_path, driver, log_queue):
             elif text == "Req. Cliente":
                 continue
     log(f"Requerimientos encontrados: {requerimiento_nros}")
+    log(f"Requerimientos existentes en el documento:")
+    for idx, nro in enumerate(sorted(req_nros_en_doc), 1):
+        log(f"  {idx}. {nro}")
     nuevos_reqs = [nro for nro in requerimiento_nros if nro not in req_nros_en_doc]
+    log(f"Requerimientos a agregar:")
+    for idx, nro in enumerate(nuevos_reqs, 1):
+        log(f"  {idx}. {nro}")
     if not nuevos_reqs:
         log("No hay nuevos requerimientos para agregar al documento.")
+        log("Proceso finalizado.")
         return False
     # 1. Detectar el bloque de 'Funcionalidad nro.' y sus detalles
     func_idx = None
@@ -130,4 +137,5 @@ def update_requerimientos(numero_funcionalidad, docx_path, driver, log_queue):
             last_p = new_p
     document.save(docx_path)
     log(f"Documento actualizado con nuevos requerimientos: {nuevos_reqs}")
+    log("Proceso finalizado.")
     return True

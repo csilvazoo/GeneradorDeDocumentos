@@ -55,16 +55,15 @@ def main():
     open_btn = ttk.Button(btns_frame, text="Abrir Documento", state="disabled")
     open_btn.grid(row=0, column=2, sticky="e")
 
-    def abrir_doc():
-        ruta_docx = ruta_var.get()
-        if os.path.exists(ruta_docx):
+    def abrir_doc_custom(ruta):
+        if os.path.exists(ruta):
             try:
-                os.startfile(ruta_docx)
+                os.startfile(ruta)
             except Exception as e:
                 messagebox.showerror("Error", f"No se pudo abrir el documento:\n{e}")
         else:
             messagebox.showerror("Error", "El archivo no existe en la ruta seleccionada.")
-    open_btn.config(command=abrir_doc)
+    open_btn.config(command=lambda: abrir_doc_custom(ruta_var.get()))
     progress = ttk.Progressbar(frm, mode="indeterminate")
     progress.grid(row=4, column=0, columnspan=2, sticky="ew", pady=5)
     status_label = ttk.Label(frm, text="", foreground="blue")
@@ -132,6 +131,8 @@ def main():
             if os.path.exists(ruta_docx) and "No existe funcionalidad o no tiene requerimientos asociados." not in log_content:
                 status_label.config(text="Documento generado exitosamente.", foreground="green")
                 open_btn.config(state="normal")
+                # Abrir el documento generado automáticamente
+                abrir_doc_custom(ruta_docx)
             else:
                 status_label.config(text="Documento NO generado.", foreground="red")
                 open_btn.config(state="disabled")
@@ -153,12 +154,9 @@ def main():
         )
         if not ruta_docx:
             return
-        # Confirmación antes de actualizar
         resp = messagebox.askyesno("Confirmar actualización", f"¿Está seguro que desea actualizar el documento?\n\n{ruta_docx}")
         if not resp:
             return
-        # Actualizar la ruta del 'guardar como' para que el botón 'Abrir Documento' funcione correctamente
-        ruta_var.set(ruta_docx)
         btn_update.config(state="disabled")
         progress.start()
         txt_log.configure(state="normal")
@@ -199,10 +197,19 @@ def main():
                 if os.path.exists(ruta_docx) and "No hay nuevos requerimientos para agregar" not in log_content:
                     status_label.config(text="Documento actualizado exitosamente.", foreground="green")
                     open_btn.config(state="normal")
+                    # Abrir el documento actualizado automáticamente
+                    abrir_doc_custom(ruta_docx)
                 else:
                     status_label.config(text="Documento NO actualizado.", foreground="red")
                     open_btn.config(state="disabled")
                     root.after(5000, lambda: status_label.config(text=""))
         threading.Thread(target=task, daemon=True).start()
+
+    # Cambiar el icono de la ventana principal
+    icon_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'resources', 'icons', 'Zoo.ico')
+    try:
+        root.iconbitmap(icon_path)
+    except Exception:
+        pass  # Si falla, no rompe la app
 
     root.mainloop()
