@@ -1,6 +1,6 @@
 # Generador de Documentos Funcionales
 
-Este proyecto es una aplicación de escritorio con interfaz gráfica (Tkinter) que automatiza la extracción de datos desde la intranet de la empresa Zoo Logic y genera un documento Word (.docx) con la información de una funcionalidad y sus requerimientos asociados. Insertandolo en base a una plantilla docx de "documentos funcionales".
+Este proyecto es una aplicación de escritorio con interfaz gráfica (Tkinter) que automatiza la extracción de datos desde la intranet de la empresa Zoo Logic y genera o actualiza documentos Word (.docx) con la información de una funcionalidad y sus requerimientos asociados, usando una plantilla base.
 
 ## Índice
 
@@ -37,42 +37,64 @@ NOTA: Para tener acceso a la intranet se hace desde una PC dentro de la red de Z
 
 ## Estructura del proyecto
 
-- `PlantillaDev.py`: Script principal con la interfaz gráfica y la lógica de extracción y generación de documentos.
-- `msedgedriver.exe`: Driver de Edge necesario para Selenium (debe estar en la misma carpeta que el script).
-- `plantillaAFU2505.docx`: Plantilla Word base sobre la que se insertan los datos extraídos.
-- `Zoo.ico`: Ícono personalizado para el ejecutable.
-- `Funcionalidad.docx`: Archivo Word generado como resultado.
+```
+FuncionalidadRequerimientos/
+├── app/
+│   ├── logic.py                # Lógica principal de generación de documentos
+│   ├── update_requerimientos.py# Lógica para actualizar documentos existentes
+│   ├── docx_helpers.py         # Funciones auxiliares para manipular docx
+│   ├── requerimientos.py       # Extracción de requerimientos
+│   ├── funcionalidad.py        # Extracción de funcionalidad
+│   ├── selenium_helpers.py     # Helpers para Selenium
+│   ├── utils.py                # Utilidades y logging
+│   └── __init__.py
+├── gui/
+│   ├── window.py               # Interfaz gráfica principal (Tkinter)
+│   └── __init__.py
+├── resources/
+│   ├── templates/plantillaAFU2505.docx # Plantilla base Word
+│   ├── icons/Zoo.ico           # Ícono de la app
+│   └── images/                 # Imágenes y capturas
+├── tests/
+│   └── test_logic.py           # Pruebas unitarias
+├── main.py                     # Entry point de la app
+├── msedgedriver.exe            # Driver Selenium para Edge
+├── requirements.txt            # Dependencias
+└── README.md                   # Este archivo
+```
 
 ## Descripción de la lógica y tecnologías
 
 ### 1. Interfaz gráfica (Tkinter)
 
 - Permite al usuario ingresar el número de funcionalidad, elegir si ver el navegador, seleccionar la ruta de guardado y ejecutar el proceso.
-- Muestra el progreso, logs en tiempo real, mensajes de éxito/error y permite abrir el documento generado.
+- Muestra el progreso, logs en tiempo real, mensajes de éxito/error y permite abrir el documento generado o actualizado.
+- Permite actualizar un documento existente, agregando solo los nuevos requerimientos al final de la sección correspondiente.
+- El ícono de la app es personalizado (Zoo.ico).
 
 ### 2. Automatización web (Selenium + Edge)
 
-- Se utiliza Selenium para abrir Microsoft Edge y navegar a la intranet.
-- El driver (`msedgedriver.exe`) se busca automáticamente en la carpeta del script, compatible con distribución como .exe.
-- Se automatiza el ingreso del número de funcionalidad, la navegación por iframes y la extracción de requerimientos.
+- Selenium abre Microsoft Edge y navega a la intranet.
+- Automatiza el ingreso del número de funcionalidad, la navegación por iframes y la extracción de requerimientos.
 
 ### 3. Extracción de datos (BeautifulSoup)
 
 - Se parsean los HTML de las páginas de la intranet para extraer los campos requeridos de la funcionalidad y los requerimientos.
 
-### 4. Generación de documento Word (python-docx)
+### 4. Generación y actualización de documento Word (python-docx)
 
 - Se utiliza una plantilla base y se insertan los datos extraídos en el formato requerido.
 - Se agregan hipervínculos y se formatea el documento según las necesidades del área.
+- **Actualización de documento**: Permite seleccionar un documento existente y agregarle solo los nuevos requerimientos, manteniendo la estructura y sin duplicar información.
 
 ### 5. Distribución como ejecutable (.exe)
 
-- Se utilizó **PyInstaller** para generar un ejecutable standalone.
-- Se incluyó el ícono personalizado y todos los recursos necesarios (driver, plantilla, etc.).
+- Se utiliza **PyInstaller** para generar un ejecutable standalone.
+- Se incluye el ícono personalizado y todos los recursos necesarios (driver, plantilla, etc.).
 - Comando utilizado:
 
 ```powershell
-pyinstaller --onefile --icon=Zoo.ico --add-data "msedgedriver.exe;." --add-data "plantillaAFU2505.docx;." PlantillaDev.py
+pyinstaller --onefile --icon=resources/icons/Zoo.ico --add-data "msedgedriver.exe;." --add-data "resources/templates/plantillaAFU2505.docx;resources/templates" main.py
 ```
 
 - El parámetro `--add-data` asegura que los archivos necesarios se incluyan en el ejecutable.
@@ -80,20 +102,56 @@ pyinstaller --onefile --icon=Zoo.ico --add-data "msedgedriver.exe;." --add-data 
 
 ## Uso de la aplicación
 
-1. Ejecutar `PlantillaDev.py` (o el .exe generado).
+1. Ejecutar `main.py` (o el .exe generado).
 2. Ingresar el número de funcionalidad.
 3. Elegir si se desea ver el navegador durante el proceso.
 4. Seleccionar la ruta de guardado del documento Word.
-5. Hacer clic en "Generar Documento".
+5. Hacer clic en "Generar Documento" para crear un nuevo documento, o en "Actualizar Documento" para agregar nuevos requerimientos a un documento existente.
 6. Visualizar el progreso y los logs.
-7. Abrir el documento generado desde la misma interfaz.
+7. Abrir el documento generado o actualizado desde la misma interfaz.
 
-![1749044579249](image/README/1749044579249.png)
+   ![1750291710356](image/README/1750291710356.png)
+
+## Generación del ejecutable (.exe)
+
+Para distribuir la aplicación como ejecutable en Windows:
+
+1. Abre PowerShell y navega a la carpeta raíz del proyecto:
+
+```powershell
+cd "c:\Users\csilva\Desktop\FuncionalidadRequerimientos"
+```
+
+2. Ejecuta el siguiente comando para generar el ejecutable:
+
+```powershell
+pyinstaller --onefile --icon=resources\icons\Zoo.ico --add-data "msedgedriver.exe;." --add-data "resources\templates\plantillaAFU2505.docx;resources\templates" main.py
+```
+
+- El ejecutable aparecerá en la carpeta `dist\main.exe`.
+- Si necesitas incluir más recursos, usa más parámetros `--add-data`.
+
+3. (Opcional) Limpieza de archivos temporales:
+
+Después de compilar, puedes borrar los archivos y carpetas temporales generados por PyInstaller para mantener tu proyecto limpio:
+
+```powershell
+Remove-Item -Recurse -Force build, main.spec
+```
+
+4. Para distribuir tu app:
+   - Copia el contenido de la carpeta `dist` junto con los recursos necesarios (por ejemplo, la carpeta `resources` si accedes a imágenes o plantillas en tiempo de ejecución).
+   - Asegúrate de incluir `msedgedriver.exe` si tu ejecutable lo requiere en tiempo de ejecución.
 
 ---
+
+**Consejo:**
+- Prueba el `.exe` en una PC limpia o en otra carpeta para asegurarte de que no falte ningún recurso.
+- Si usas rutas relativas en tu código, asegúrate de que los recursos estén en la ubicación esperada respecto al ejecutable.
 
 ## Notas adicionales
 
 - El driver de Edge debe ser compatible con la versión instalada de Microsoft Edge.
 - Si se distribuye como .exe, todos los archivos necesarios deben estar en la misma carpeta o ser incluidos con PyInstaller.
-- La aplicación está lista para ser utilizada en cualquier PC con Windows y Microsoft Edge instalado.
+- El sistema de logs muestra claramente los requerimientos existentes, los nuevos a agregar y el resultado de cada operación.
+- La estructura del proyecto es modular y fácil de mantener.

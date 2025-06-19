@@ -1,0 +1,4 @@
+# requirements.txt
+selenium
+python-docx
+bs4
