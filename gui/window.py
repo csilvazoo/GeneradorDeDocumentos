@@ -63,14 +63,18 @@ def main():
                 messagebox.showerror("Error", f"No se pudo abrir el documento:\n{e}")
         else:
             messagebox.showerror("Error", "El archivo no existe en la ruta seleccionada.")
-    open_btn.config(command=lambda: abrir_doc_custom(ruta_var.get()))
+    open_btn.config(command=lambda: abrir_doc_custom(ruta_var.get()))    
+    # Crear la barra de progreso pero ocultarla inicialmente
     progress = ttk.Progressbar(frm, mode="indeterminate")
     progress.grid(row=4, column=0, columnspan=2, sticky="ew", pady=5)
+    progress.grid_remove()  # Oculta la barra al iniciar
+    progress['value'] = 0
+    progress.update_idletasks()
     status_label = ttk.Label(frm, text="", foreground="blue")
     status_label.grid(row=5, column=0, columnspan=2, pady=(0,5))
     success_label = ttk.Label(frm, text="", foreground="green")
     success_label.grid(row=8, column=0, columnspan=2, pady=(5,0))
-    ttk.Label(frm, text="Detalle de ejecución:").grid(row=5, column=0, columnspan=2, sticky=tk.W)
+    # Eliminar etiqueta duplicada y dejar solo una
     log_label = ttk.Label(frm, text="Detalle de ejecución:")
     log_label.grid(row=5, column=0, columnspan=2, sticky=tk.W)
     txt_log = ScrolledText(frm, height=15, width=100, state="disabled", bg="#ffffff", bd=0, highlightthickness=0)
@@ -104,6 +108,8 @@ def main():
             messagebox.showerror("Error", "Ingrese un número de funcionalidad válido.")
             return
         btn.config(state="disabled")
+        progress['value'] = 0
+        progress.grid()  # Mostrar la barra al iniciar acción
         progress.start()
         txt_log.configure(state="normal")
         txt_log.delete(1.0, tk.END)
@@ -113,11 +119,11 @@ def main():
         status_label.config(text="Generando Documento", foreground="blue")
         root.geometry("600x220")
         ruta_docx = ruta_var.get()
-        def limpiar_label():
-            success_label.config(text="")
         def task():
             run_script(num, ver_explorador_var.get(), log_queue, ruta_docx)
             progress.stop()
+            progress['value'] = 0
+            progress.grid_remove()  # Ocultar la barra al terminar
             btn.config(state="normal")
             log_content = ""
             try:
@@ -158,6 +164,8 @@ def main():
         if not resp:
             return
         btn_update.config(state="disabled")
+        progress['value'] = 0
+        progress.grid()  # Mostrar la barra al iniciar acción
         progress.start()
         txt_log.configure(state="normal")
         txt_log.delete(1.0, tk.END)
@@ -184,6 +192,8 @@ def main():
             finally:
                 driver.quit()
                 progress.stop()
+                progress['value'] = 0
+                progress.grid_remove()  # Ocultar la barra al terminar
                 btn_update.config(state="normal")
                 log_content = ""
                 try:

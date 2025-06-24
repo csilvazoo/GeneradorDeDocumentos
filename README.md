@@ -146,6 +146,7 @@ Remove-Item -Recurse -Force build, main.spec
 ---
 
 **Consejo:**
+
 - Prueba el `.exe` en una PC limpia o en otra carpeta para asegurarte de que no falte ningún recurso.
 - Si usas rutas relativas en tu código, asegúrate de que los recursos estén en la ubicación esperada respecto al ejecutable.
 
