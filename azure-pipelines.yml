@@ -28,9 +28,13 @@ steps:
     python calver_increment.py
   displayName: 'Actualizar versión CalVer incremental'
 
+- powershell: |
+    $version = Get-Content VERSION | ForEach-Object { $_.Trim() }
+    echo "##vso[task.setvariable variable=APP_VERSION]$version"
+  displayName: 'Leer versión desde VERSION'
+
 - script: |
-    set VERSION_TAG=$(type VERSION)
-    pyinstaller --onefile --windowed --name "GeneradorDocumentosFuncionales-$(type VERSION)" --icon=resources/icons/Zoo.ico --add-data "resources;resources" --add-data "app;app" --add-data "gui;gui" --add-data "msedgedriver.exe;." main.py
+    pyinstaller --onefile --windowed --name "Generador Documentos Funcionales-$(APP_VERSION)" --icon=resources/icons/Zoo.ico --add-data "resources;resources" --add-data "app;app" --add-data "gui;gui" --add-data "msedgedriver.exe;." main.py
   displayName: 'Generar .exe con PyInstaller y versión'
 
 - task: PublishBuildArtifacts@1
