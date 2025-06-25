@@ -14,13 +14,15 @@ import sys
 def get_app_version():
     try:
         if hasattr(sys, '_MEIPASS'):
-            # Ejecutable PyInstaller
             version_path = os.path.join(sys._MEIPASS, 'VERSION')
         else:
-            # Entorno desarrollo
             version_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'VERSION')
-        with open(version_path, 'r') as f:
-            return f.read().strip()
+        version = open(version_path, 'r').read().strip()
+        import re
+        m = re.match(r"(\d{4})(\d{2})(\d{2})\.(\d+)", version)
+        if m:
+            return f"{m.group(1)[2:]}.{m.group(2)}.{m.group(3)}.{m.group(4)}"
+        return version
     except Exception:
         return "Sin versión"
 
