@@ -13,6 +13,11 @@ trigger:
 pool:
   vmImage: 'windows-latest'
 
+variables:
+  # Formato: YY.MM.DD.$(Rev:r)
+  # Ejemplo: 25.06.25.1
+  Build.BuildNumber: $[format('{0:yy}.{0:MM}.{0:dd}.{1}', pipeline.startTime, counter('buildcounter', 1))]
+
 steps:
 - task: UsePythonVersion@0
   inputs:
@@ -24,14 +29,10 @@ steps:
     pip install pyinstaller
   displayName: 'Instalar dependencias'
 
-- script: |
-    python calver_increment.py
-  displayName: 'Actualizar versión CalVer incremental'
-
 - powershell: |
-    $version = Get-Content VERSION | ForEach-Object { $_.Trim() }
-    echo "##vso[task.setvariable variable=APP_VERSION]$version"
-  displayName: 'Leer versión desde VERSION'
+    Set-Content VERSION "$(Build.BuildNumber)"
+    echo "##vso[task.setvariable variable=APP_VERSION]$(Build.BuildNumber)"
+  displayName: 'Escribir versión del pipeline en VERSION'
 
 - script: |
     pyinstaller --onefile --windowed --name "Generador Documentos Funcionales-$(APP_VERSION)" --icon=resources/icons/Zoo.ico --add-data "resources;resources" --add-data "app;app" --add-data "gui;gui" --add-data "msedgedriver.exe;." main.py
