@@ -17,7 +17,6 @@ variables:
   # Formato: YY.MM.DD.$(Rev:r)
   # Ejemplo: 25.06.25.1
   Build.BuildNumber: $[format('{0:yy}.{0:MM}.{0:dd}.{1}', pipeline.startTime, counter('buildcounter', 1))]
-  GIT_REMOTE_URL: https://$(System.AccessToken)@$(Build.Repository.Uri)
 
 steps:
 - checkout: self
@@ -49,9 +48,11 @@ steps:
   displayName: 'Checkout rama dev antes de commit'
 
 - powershell: |
+    $repo = "$(Build.Repository.Uri)".Replace("https://", "")
+    $remoteUrl = "https://$(System.AccessToken)@${repo}"
     git config user.email "pipeline@azuredevops"
     git config user.name "Azure DevOps Pipeline"
-    git remote set-url origin "$(GIT_REMOTE_URL)"
+    git remote set-url origin $remoteUrl
     git add VERSION
     git commit -m "Actualiza VERSION a $(APP_VERSION) [ci skip]"
     if ($LASTEXITCODE -ne 0) { Write-Host "No hay cambios en VERSION" }
