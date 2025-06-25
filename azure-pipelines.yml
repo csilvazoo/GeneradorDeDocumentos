@@ -49,6 +49,7 @@ steps:
 
 - powershell: |
     $repo = "$(Build.Repository.Uri)".Replace("https://", "")
+    if ($repo.Contains("@")) { $repo = $repo.Substring($repo.IndexOf("@") + 1) }
     $remoteUrl = "https://$(System.AccessToken)@${repo}"
     git config user.email "pipeline@azuredevops"
     git config user.name "Azure DevOps Pipeline"
