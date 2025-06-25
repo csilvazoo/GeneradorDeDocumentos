@@ -38,7 +38,7 @@ steps:
   displayName: 'Escribir versión del pipeline en VERSION'
 
 - script: |
-    pyinstaller --onefile --windowed --name "Generador Documentos Funcionales-$(APP_VERSION)" --icon=resources/icons/Zoo.ico --add-data "resources;resources" --add-data "app;app" --add-data "gui;gui" --add-data "msedgedriver.exe;." main.py
+    pyinstaller --onefile --windowed --name "Generador Documentos Funcionales-$(APP_VERSION)" --icon=resources/icons/Zoo.ico --add-data "resources;resources" --add-data "app;app" --add-data "gui;gui" --add-data "msedgedriver.exe;." --add-data "VERSION;." main.py
   displayName: 'Generar .exe con PyInstaller y versión'
   workingDirectory: '$(Build.SourcesDirectory)'
 
