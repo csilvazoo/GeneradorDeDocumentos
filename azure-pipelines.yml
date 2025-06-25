@@ -37,6 +37,15 @@ steps:
     pyinstaller --onefile --windowed --name "Generador Documentos Funcionales-$(APP_VERSION)" --icon=resources/icons/Zoo.ico --add-data "resources;resources" --add-data "app;app" --add-data "gui;gui" --add-data "msedgedriver.exe;." main.py
   displayName: 'Generar .exe con PyInstaller y versión'
 
+- powershell: |
+    git config user.email "pipeline@azuredevops"
+    git config user.name "Azure DevOps Pipeline"
+    git add VERSION
+    git commit -m "Actualiza VERSION a $(APP_VERSION) [ci skip]" || echo "No hay cambios en VERSION"
+    git push origin dev
+  displayName: 'Commit y push de VERSION actualizado'
+  condition: succeeded()
+
 - task: PublishBuildArtifacts@1
   inputs:
     PathtoPublish: 'dist'
