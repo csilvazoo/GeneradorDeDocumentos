@@ -1,8 +1,8 @@
 # Changelog
 
-Todas las versiones siguen el formato [SemVer](https://semver.org/lang/es/).
+Todas las versiones siguen el formato CalVer-incremental: AAAA.MM.DD-N.
 
-## [2.1.0] - 2025-06-25
+## [2025.06.25-1]
 ### Agregado
 - Barra de progreso oculta hasta ejecución.
 - Actualización automática de .docx desde la GUI.
@@ -12,7 +12,7 @@ Todas las versiones siguen el formato [SemVer](https://semver.org/lang/es/).
 - Error visual de barra verde inicial.
 - Eliminación de etiquetas duplicadas en la GUI.
 
-## [2.0.0] - 2025-06-10
+## [2025.06.10-1]
 ### Agregado
 - Refactorización completa: lógica, GUI y recursos separados.
 - Integración de Selenium y generación de documentos Word.

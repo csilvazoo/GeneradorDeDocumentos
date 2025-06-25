@@ -6,6 +6,9 @@ trigger:
   branches:
     include:
       - dev
+  tags:
+    include:
+      - '*'
 
 pool:
   vmImage: 'windows-latest'
@@ -22,8 +25,13 @@ steps:
   displayName: 'Instalar dependencias'
 
 - script: |
-    pyinstaller --onefile --windowed --name "Generador Documentos Funcionales" --icon resources/icons/Zoo.ico --add-data "resources;resources" --add-data "app;app" --add-data "gui;gui" --add-data "msedgedriver.exe;." main.py
-  displayName: 'Generar .exe con PyInstaller'
+    python calver_increment.py
+  displayName: 'Actualizar versión CalVer incremental'
+
+- script: |
+    set VERSION_TAG=$(type VERSION)
+    pyinstaller --onefile --windowed --name "GeneradorDocumentosFuncionales-$(type VERSION)" --icon=resources/icons/Zoo.ico --add-data "resources;resources" --add-data "app;app" --add-data "gui;gui" --add-data "msedgedriver.exe;." main.py
+  displayName: 'Generar .exe con PyInstaller y versión'
 
 - task: PublishBuildArtifacts@1
   inputs:

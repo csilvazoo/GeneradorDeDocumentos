@@ -11,10 +11,17 @@ from selenium.webdriver.edge.options import Options
 from selenium.webdriver.edge.service import Service as EdgeService
 import sys
 
+def get_app_version():
+    try:
+        with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'VERSION'), 'r') as f:
+            return f.read().strip()
+    except Exception:
+        return "Sin versión"
+
 def main():
     log_queue = queue.Queue()
     root = tk.Tk()
-    root.title("Generador de Documentos Funcionales")
+    root.title(f"Generador de Documentos Funcionales v{get_app_version()}")
     root.geometry("600x220")
     frm = ttk.Frame(root, padding=20)
     frm.pack(fill=tk.BOTH, expand=True)
@@ -221,5 +228,9 @@ def main():
         root.iconbitmap(icon_path)
     except Exception:
         pass  # Si falla, no rompe la app
+
+    # Puedes mostrar la versión en la GUI si lo deseas, por ejemplo en un label:
+    version_label = ttk.Label(frm, text=f"Versión: {get_app_version()}", foreground="gray")
+    version_label.grid(row=9, column=0, columnspan=2, sticky=tk.E, pady=(0, 0))
 
     root.mainloop()
