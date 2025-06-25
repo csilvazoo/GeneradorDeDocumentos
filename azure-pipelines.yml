@@ -22,7 +22,7 @@ steps:
   displayName: 'Instalar dependencias'
 
 - script: |
-    pyinstaller --onefile --windowed --icon resources/icons/Zoo.ico --add-data "resources;resources" --add-data "app;app" --add-data "gui;gui" --add-data "msedgedriver.exe;." main.py
+    pyinstaller --onefile --windowed --icon=resources\icons\Zoo.ico --add-data "msedgedriver.exe;." --add-data "resources\templates\plantillaAFU2505.docx;resources\templates" main.py
   displayName: 'Generar .exe con PyInstaller'
 
 - task: PublishBuildArtifacts@1
