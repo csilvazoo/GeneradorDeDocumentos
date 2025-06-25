@@ -38,6 +38,10 @@ steps:
   displayName: 'Generar .exe con PyInstaller y versión'
 
 - powershell: |
+    git checkout dev
+  displayName: 'Checkout rama dev antes de commit'
+
+- powershell: |
     git config user.email "pipeline@azuredevops"
     git config user.name "Azure DevOps Pipeline"
     git add VERSION
