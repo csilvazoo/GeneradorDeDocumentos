@@ -29,8 +29,8 @@ def get_app_version():
 def main():
     log_queue = queue.Queue()
     root = tk.Tk()
-    root.title(f"Generador de Documentos Funcionales v{get_app_version()}")
-    root.geometry("600x220")
+    root.title(f"Generador de Documentos Funcionales")
+    root.geometry("600x235")
     frm = ttk.Frame(root, padding=20)
     frm.pack(fill=tk.BOTH, expand=True)
     ttk.Label(frm, text="Funcionalidad:").grid(row=0, column=0, sticky=tk.W)
@@ -101,7 +101,7 @@ def main():
         if txt_log.winfo_viewable():
             txt_log.grid_remove()
             ver_detalle_btn.config(text="Ver detalle")
-            root.geometry("600x220")
+            root.geometry("600x245")
         else:
             txt_log.grid(row=7, column=0, columnspan=2, sticky="nsew", pady=(0,10))
             ver_detalle_btn.config(text="Ocultar detalle")
@@ -132,7 +132,7 @@ def main():
         success_label.config(text="", foreground="green")
         open_btn.config(state="disabled")
         status_label.config(text="Generando Documento", foreground="blue")
-        root.geometry("600x220")
+        root.geometry("600x245")
         ruta_docx = ruta_var.get()
         def task():
             run_script(num, ver_explorador_var.get(), log_queue, ruta_docx)
@@ -160,7 +160,7 @@ def main():
                 root.after(5000, lambda: status_label.config(text=""))
         threading.Thread(target=task, daemon=True).start()
     btn.config(command=on_run)
-    root.geometry("600x220")
+    root.geometry("600x235")
 
     def on_update():
         num = funcionalidad_var.get().strip()
@@ -188,7 +188,7 @@ def main():
         success_label.config(text="", foreground="green")
         open_btn.config(state="disabled")
         status_label.config(text="Actualizando Documento", foreground="blue")
-        root.geometry("600x220")
+        root.geometry("600x245")
         def task():
             options = Options()
             options.add_argument("--start-maximized")
@@ -236,9 +236,8 @@ def main():
         root.iconbitmap(icon_path)
     except Exception:
         pass  # Si falla, no rompe la app
-
-    # Puedes mostrar la versión en la GUI si lo deseas, por ejemplo en un label:
+    # Label de versión más alto, justo después de ver detalle
     version_label = ttk.Label(frm, text=f"Versión: {get_app_version()}", foreground="gray")
-    version_label.grid(row=9, column=0, columnspan=2, sticky=tk.E, pady=(0, 0))
+    version_label.grid(row=8, column=0, columnspan=2, sticky=tk.E, pady=(2, 10))
 
     root.mainloop()
