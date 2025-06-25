@@ -19,6 +19,9 @@ variables:
   Build.BuildNumber: $[format('{0:yy}.{0:MM}.{0:dd}.{1}', pipeline.startTime, counter('buildcounter', 1))]
 
 steps:
+- checkout: self
+  persistCredentials: true
+
 - task: UsePythonVersion@0
   inputs:
     versionSpec: '3.11'  # O la versión que uses
@@ -38,9 +41,6 @@ steps:
     pyinstaller --onefile --windowed --name "Generador Documentos Funcionales-$(APP_VERSION)" --icon=resources/icons/Zoo.ico --add-data "resources;resources" --add-data "app;app" --add-data "gui;gui" --add-data "msedgedriver.exe;." main.py
   displayName: 'Generar .exe con PyInstaller y versión'
   workingDirectory: '$(Build.SourcesDirectory)'
-
-- checkout: self
-  persistCredentials: true
 
 - powershell: |
     git fetch origin dev
