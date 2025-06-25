@@ -41,7 +41,8 @@ steps:
     git config user.email "pipeline@azuredevops"
     git config user.name "Azure DevOps Pipeline"
     git add VERSION
-    git commit -m "Actualiza VERSION a $(APP_VERSION) [ci skip]" || echo "No hay cambios en VERSION"
+    git commit -m "Actualiza VERSION a $(APP_VERSION) [ci skip]"
+    if ($LASTEXITCODE -ne 0) { Write-Host "No hay cambios en VERSION" }
     git push origin dev
   displayName: 'Commit y push de VERSION actualizado'
   condition: succeeded()
