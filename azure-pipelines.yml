@@ -37,6 +37,7 @@ steps:
 - script: |
     pyinstaller --onefile --windowed --name "Generador Documentos Funcionales-$(APP_VERSION)" --icon=resources/icons/Zoo.ico --add-data "resources;resources" --add-data "app;app" --add-data "gui;gui" --add-data "msedgedriver.exe;." main.py
   displayName: 'Generar .exe con PyInstaller y versión'
+  workingDirectory: '$(Build.SourcesDirectory)'
 
 - checkout: self
   persistCredentials: true
