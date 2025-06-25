@@ -38,6 +38,10 @@ steps:
   displayName: 'Escribir versión del pipeline en VERSION'
 
 - script: |
+    python format_version.py
+  displayName: 'Formatear VERSION a YY.MM.DD.N'
+
+- script: |
     pyinstaller --onefile --windowed --name "Generador Documentos Funcionales-$(APP_VERSION)" --icon=resources/icons/Zoo.ico --add-data "resources;resources" --add-data "app;app" --add-data "gui;gui" --add-data "VERSION;." --add-data "msedgedriver.exe;." main.py
   displayName: 'Generar .exe con PyInstaller y versión'
   workingDirectory: '$(Build.SourcesDirectory)'
