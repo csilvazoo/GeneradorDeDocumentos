@@ -38,7 +38,8 @@ steps:
   displayName: 'Generar .exe con PyInstaller y versión'
 
 - powershell: |
-    git checkout dev
+    git fetch origin dev
+    git checkout -B dev origin/dev
   displayName: 'Checkout rama dev antes de commit'
 
 - powershell: |
