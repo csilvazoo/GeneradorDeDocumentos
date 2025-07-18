@@ -13,11 +13,11 @@ trigger:
 pool:
   vmImage: 'windows-latest'
 
-name: $[format('{0:yy}.{0:MM}.{1}', pipeline.startTime, counter(format('{0:yy}.{0:MM}', pipeline.startTime), 1))]
+name: $[format('{0:yy}.{0:MM}.{0:dd}.{1}', pipeline.startTime, counter(format('{0:yy}.{0:MM}', pipeline.startTime), 1))]
 
 variables:
-  # Formato: YY.MM.N
-  # Ejemplo: 25.07.1
+  # Formato: YY.MM.DD.N
+  # Ejemplo: 25.07.18.1
   Build.BuildNumber: $(Build.BuildNumber)
 
 steps:
