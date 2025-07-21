@@ -10,7 +10,7 @@ Todas las versiones siguen el formato CalVer-incremental: YY.MM.DD.N (desde 25.0
 - El archivo VERSION, el nombre del .exe y la GUI muestran la versión en este formato.
 - Sincronización automática de VERSION entre pipeline y repositorio.
 
-## [2025.06.25.1]
+## [25.06.25.1]
 
 ### Agregado
 
@@ -23,7 +23,7 @@ Todas las versiones siguen el formato CalVer-incremental: YY.MM.DD.N (desde 25.0
 - Error visual de barra verde inicial.
 - Eliminación de etiquetas duplicadas en la GUI.
 
-## [2025.06.10.1]
+## [25.06.10.1]
 
 ### Agregado
 

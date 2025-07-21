@@ -110,7 +110,7 @@ pyinstaller --onefile --icon=resources/icons/Zoo.ico --add-data "msedgedriver.ex
 6. Visualizar el progreso y los logs.
 7. Abrir el documento generado o actualizado desde la misma interfaz.
 
-   ![1750291710356](image/README/1750291710356.png)
+   ![1753113115563](image/README/1753113115563.png)
 
 ## Generación del ejecutable (.exe)
 
@@ -156,3 +156,7 @@ Remove-Item -Recurse -Force build, main.spec
 - Si se distribuye como .exe, todos los archivos necesarios deben estar en la misma carpeta o ser incluidos con PyInstaller.
 - El sistema de logs muestra claramente los requerimientos existentes, los nuevos a agregar y el resultado de cada operación.
 - La estructura del proyecto es modular y fácil de mantener.
+
+## Integración CI/CD
+
+Se añadió el archivo `azure-pipelines.yml` para la implementación de pipelines automáticos en Azure DevOps.
