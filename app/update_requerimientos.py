@@ -1,4 +1,5 @@
 import os
+import copy
 from docx import Document
 from app.docx_helpers import insert_paragraph_after, is_empty_req_block, add_hyperlink
 from app.requerimientos import extraer_requerimiento
@@ -93,15 +94,18 @@ def update_requerimientos(numero_funcionalidad, docx_path, driver, log_queue):
             if t.startswith('requerimiento nro.'):
                 break
             end_func_idx += 1
-        # Extraer el bloque de funcionalidad
-        func_block = document.paragraphs[func_idx:end_func_idx]
+        # Extraer los elementos XML completos del bloque de funcionalidad (preserva imágenes, comentarios, etc.)
+        func_block_elements = []
+        for i in range(func_idx, end_func_idx):
+            # Clonar el elemento XML completo para preservar todo el contenido
+            func_block_elements.append(document.paragraphs[i]._element)
         # Eliminar el bloque de funcionalidad del documento
         for j in range(end_func_idx-1, func_idx-1, -1):
             document.paragraphs[j]._element.getparent().remove(document.paragraphs[j]._element)
         # Insertar los nuevos requerimientos donde estaba el bloque de funcionalidad
         insert_after_paragraph = document.paragraphs[func_idx-1] if func_idx > 0 else None
     else:
-        func_block = []
+        func_block_elements = []
         insert_after_paragraph = document.paragraphs[-1]
     # 2. Insertar los nuevos requerimientos
     last_p = insert_after_paragraph
@@ -131,10 +135,19 @@ def update_requerimientos(numero_funcionalidad, docx_path, driver, log_queue):
             p = insert_paragraph_after(p, f"Interacciones relacionadas: no hay", style="List Bullet")
         last_p = p
     # 3. Volver a insertar el bloque de funcionalidad después del último requerimiento
-    if func_block:
-        for para in func_block:
-            new_p = insert_paragraph_after(last_p, para.text, style=para.style.name if hasattr(para.style, 'name') else None)
-            last_p = new_p
+    if func_block_elements:
+        # Insertar los elementos XML preservados (mantiene imágenes, comentarios, formato, etc.)
+        for element in func_block_elements:
+            # Hacer una copia profunda del elemento XML para preservar todo el contenido
+            cloned_element = copy.deepcopy(element)
+            # Insertar después del último párrafo agregado
+            last_p._element.addnext(cloned_element)
+            # Actualizar la referencia al último párrafo
+            # Buscar el párrafo correspondiente al elemento insertado
+            for p in document.paragraphs:
+                if p._element == cloned_element:
+                    last_p = p
+                    break
     document.save(docx_path)
     log(f"Documento actualizado con nuevos requerimientos: {nuevos_reqs}")
     log("Proceso finalizado.")
