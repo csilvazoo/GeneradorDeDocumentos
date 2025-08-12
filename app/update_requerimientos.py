@@ -59,16 +59,29 @@ def update_requerimientos(numero_funcionalidad, docx_path, driver, log_queue):
             after_req_cliente = True
             continue
         if after_req_cliente:
-            if text.isdigit() and len(text) < 7:
-                nro = text
-                href = f"http://reportes03/reports/report/IyD/Gestion/Requerimiento?TipoRequerimiento=1&Numero={nro}"
-                requerimiento_nros.append(nro)
-                requerimiento_links.append(href)
-            elif text.isdigit() and len(text) >= 7:
-                continue
+            if text.isdigit():
+                # Filtrar por rango de números para distinguir requerimientos de incidentes
+                # Requerimientos típicos: 2-5 dígitos (99-99999)
+                # Incidentes típicos: 6+ dígitos (100000+)
+                num = int(text)
+                if 99 <= num <= 99999:  # Solo requerimientos en este rango
+                    nro = text
+                    href = f"http://reportes03/reports/report/IyD/Gestion/Requerimiento?TipoRequerimiento=1&Numero={nro}"
+                    requerimiento_nros.append(nro)
+                    requerimiento_links.append(href)
             elif text == "Req. Cliente":
                 continue
-    log(f"Requerimientos encontrados: {requerimiento_nros}")
+    log(f"Requerimientos encontrados:")
+    # Mostrar en dos columnas verticalmente alternadas
+    half = (len(requerimiento_nros) + 1) // 2  # Redondear hacia arriba
+    for i in range(half):
+        left = f"  {i+1}. {requerimiento_nros[i]}"
+        right_idx = i + half
+        if right_idx < len(requerimiento_nros):
+            right = f"  {right_idx+1}. {requerimiento_nros[right_idx]}"
+            log(f"{left:<25} {right}")
+        else:
+            log(left)
     log(f"Requerimientos existentes en el documento:")
     for idx, nro in enumerate(sorted(req_nros_en_doc), 1):
         log(f"  {idx}. {nro}")
