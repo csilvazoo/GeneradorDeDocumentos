@@ -7,9 +7,11 @@ para evitar problemas de CORS.
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import requests
+from requests_ntlm import HttpNtlmAuth
 from urllib.parse import urljoin
 import logging
 import sys
+import os
 
 # Configurar logging
 logging.basicConfig(level=logging.INFO)
@@ -22,6 +24,17 @@ CORS(app)  # Permitir todas las peticiones CORS
 BASE_URL = 'http://reportes03/reports/report/IyD/Gestion'
 FUNCIONALIDAD_URL = f'{BASE_URL}/Funcionalidad'
 REQUERIMIENTO_URL = f'{BASE_URL}/Requerimiento'
+
+def get_auth_session():
+    """Crear sesión con autenticación automática de Windows (NTLM)"""
+    session = requests.Session()
+    
+    # Usar autenticación NTLM automática con las credenciales del usuario actual de Windows
+    # Esto equivale a usar las mismas credenciales que usa el navegador automáticamente
+    session.auth = HttpNtlmAuth('', '')  # Credenciales vacías = usar usuario actual de Windows
+    
+    logger.info("Usando autenticación automática de Windows (NTLM)")
+    return session
 
 @app.route('/health', methods=['GET'])
 def health_check():
@@ -42,8 +55,11 @@ def get_funcionalidad(numero):
         url = f'{FUNCIONALIDAD_URL}?Funcionalidad={numero}'
         logger.info(f'Accediendo a: {url}')
         
+        # Crear sesión con autenticación
+        session = get_auth_session()
+        
         # Hacer la petición a la intranet
-        response = requests.get(url, timeout=30)
+        response = session.get(url, timeout=30)
         response.raise_for_status()
         
         # Verificar que la respuesta tenga contenido
@@ -93,8 +109,11 @@ def get_requerimiento(numero):
         url = f'{REQUERIMIENTO_URL}?Requerimiento={numero}'
         logger.info(f'Accediendo a: {url}')
         
+        # Crear sesión con autenticación
+        session = get_auth_session()
+        
         # Hacer la petición a la intranet
-        response = requests.get(url, timeout=30)
+        response = session.get(url, timeout=30)
         response.raise_for_status()
         
         # Verificar que la respuesta tenga contenido
@@ -140,6 +159,7 @@ def internal_error(error):
 
 if __name__ == '__main__':
     port = 5000
+    
     print(f"""
 🚀 Servidor Proxy iniciado en: http://localhost:{port}
 📋 Endpoints disponibles:
@@ -147,6 +167,7 @@ if __name__ == '__main__':
    • GET /api/funcionalidad/<numero> - Obtener datos de funcionalidad
    • GET /api/requerimiento/<numero> - Obtener datos de requerimiento
 
+🔐 Autenticación: Automática (usando credenciales de Windows)
 💡 Para usar con la aplicación web, configura la URL base como: http://localhost:{port}
 """)
     
