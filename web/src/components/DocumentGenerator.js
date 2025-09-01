@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { extractRequerimientos } from '../utils/dataExtractor';
 import { generateWordDocument } from '../services/documentGenerator';
 import { fetchFuncionalidadData, fetchRequerimientoData } from '../services/intranetApi';
+import ProxyConfig from './ProxyConfig';
 import './DocumentGenerator.css';
 
 const DocumentGenerator = () => {
@@ -10,6 +11,7 @@ const DocumentGenerator = () => {
   const [logs, setLogs] = useState([]);
   const [requerimientos, setRequerimientos] = useState([]);
   const [error, setError] = useState('');
+  const [isProxyConfigured, setIsProxyConfigured] = useState(false);
 
   const addLog = (message) => {
     setLogs(prev => [...prev, `${new Date().toLocaleTimeString()}: ${message}`]);
@@ -138,6 +140,8 @@ const DocumentGenerator = () => {
 
   return (
     <div className="document-generator">
+      <ProxyConfig onConfigured={() => setIsProxyConfigured(true)} />
+      
       <div className="card">
         <h2>🔧 Generar Nuevo Documento</h2>
         
