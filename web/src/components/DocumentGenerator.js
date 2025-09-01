@@ -40,6 +40,7 @@ const DocumentGenerator = () => {
       
       // 1. Obtener datos de funcionalidad
       addLog('📊 Obteniendo datos de funcionalidad de la intranet...');
+      addLog(`🔗 Accediendo a: http://reportes03/reports/report/IyD/Gestion/Funcionalidad?Funcionalidad=${numeroFuncionalidad}`);
       const funcionalidadData = await fetchFuncionalidadData(numeroFuncionalidad);
       addLog('✅ Datos de funcionalidad obtenidos correctamente');
 
@@ -161,6 +162,17 @@ const DocumentGenerator = () => {
           {isGenerating && <span className="loading-spinner"></span>}
           {isGenerating ? 'Generando Documento...' : '🚀 Generar Documento'}
         </button>
+
+        {numeroFuncionalidad && validateNumeroFuncionalidad(numeroFuncionalidad) && (
+          <button
+            className="btn btn-secondary"
+            onClick={() => window.open(`http://reportes03/reports/report/IyD/Gestion/Funcionalidad?Funcionalidad=${numeroFuncionalidad}`, '_blank')}
+            disabled={isGenerating}
+            style={{ marginLeft: '10px' }}
+          >
+            🔗 Abrir URL Manualmente
+          </button>
+        )}
 
         {error && (
           <div className="error">
