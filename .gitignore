@@ -23,7 +23,7 @@ msedgedriver.exe
 *.tmp
 
 # Archivos de Word generados
-*.docx
+# *.docx
 
 # Otros
 .DS_Store

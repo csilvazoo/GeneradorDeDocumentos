@@ -1,0 +1,74 @@
+# Python package
+# Create and test a Python package on multiple Python versions.
+# Add steps that analyze code, save the dist with the build record, publish to a PyPI-compatible index, and more:
+# https://docs.microsoft.com/azure/devops/pipelines/languages/python
+trigger:
+  branches:
+    include:
+      - dev
+  tags:
+    include:
+      - '*'
+
+pool:
+  vmImage: 'windows-latest'
+
+name: $[format('{0:yy}.{0:MM}.{0:dd}.{1}', pipeline.startTime, counter(format('{0:yy}.{0:MM}', pipeline.startTime), 1))]
+
+variables:
+  # Formato: YY.MM.DD.N
+  # Ejemplo: 25.07.18.1
+  Build.BuildNumber: $(Build.BuildNumber)
+
+steps:
+- checkout: self
+  persistCredentials: true
+
+- task: UsePythonVersion@0
+  inputs:
+    versionSpec: '3.11'  # O la versión que uses
+
+- script: |
+    python -m pip install --upgrade pip
+    pip install -r requirements.txt
+    pip install pyinstaller
+  displayName: 'Instalar dependencias'
+
+- powershell: |
+    Set-Content VERSION "$(Build.BuildNumber)"
+    echo "##vso[task.setvariable variable=APP_VERSION]$(Build.BuildNumber)"
+  displayName: 'Escribir versión del pipeline en VERSION'
+
+- script: |
+    python format_version.py
+  displayName: 'Formatear VERSION a YY.MM.DD.N'
+
+- script: |
+    pyinstaller --onefile --windowed --name "Generador Documentos Funcionales" --icon=resources/icons/Zoo.ico --add-data "resources;resources" --add-data "app;app" --add-data "gui;gui" --add-data "VERSION;." --add-data "msedgedriver.exe;." main.py
+  displayName: 'Generar .exe con PyInstaller y versión'
+  workingDirectory: '$(Build.SourcesDirectory)'
+
+- powershell: |
+    git fetch origin dev
+    git checkout -B dev origin/dev
+  displayName: 'Checkout rama dev antes de commit'
+
+- powershell: |
+    $repo = "$(Build.Repository.Uri)".Replace("https://", "")
+    if ($repo.Contains("@")) { $repo = $repo.Substring($repo.IndexOf("@") + 1) }
+    $remoteUrl = "https://$(System.AccessToken)@${repo}"
+    git config user.email "pipeline@azuredevops"
+    git config user.name "Azure DevOps Pipeline"
+    git remote set-url origin $remoteUrl
+    git add VERSION
+    git commit -m "Actualiza VERSION a $(APP_VERSION) [ci skip]"
+    if ($LASTEXITCODE -ne 0) { Write-Host "No hay cambios en VERSION" }
+    git push origin HEAD:dev
+  displayName: 'Commit y push de VERSION actualizado'
+  condition: succeeded()
+
+- task: PublishBuildArtifacts@1
+  inputs:
+    PathtoPublish: 'dist'
+    ArtifactName: 'GeneradorDocumentosFuncionales'
+    publishLocation: 'Container'

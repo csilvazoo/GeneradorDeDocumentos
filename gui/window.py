@@ -11,11 +11,26 @@ from selenium.webdriver.edge.options import Options
 from selenium.webdriver.edge.service import Service as EdgeService
 import sys
 
+def get_app_version():
+    try:
+        if hasattr(sys, '_MEIPASS'):
+            version_path = os.path.join(sys._MEIPASS, 'VERSION')
+        else:
+            version_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'VERSION')
+        version = open(version_path, 'r').read().strip()
+        import re
+        m = re.match(r"(\d{4})(\d{2})(\d{2})\.(\d+)", version)
+        if m:
+            return f"{m.group(1)[2:]}.{m.group(2)}.{m.group(3)}.{m.group(4)}"
+        return version
+    except Exception:
+        return "Sin versión"
+
 def main():
     log_queue = queue.Queue()
     root = tk.Tk()
-    root.title("Generador de Documentos Funcionales")
-    root.geometry("600x220")
+    root.title(f"Generador de Documentos Funcionales")
+    root.geometry("600x235")
     frm = ttk.Frame(root, padding=20)
     frm.pack(fill=tk.BOTH, expand=True)
     ttk.Label(frm, text="Funcionalidad:").grid(row=0, column=0, sticky=tk.W)
@@ -63,14 +78,18 @@ def main():
                 messagebox.showerror("Error", f"No se pudo abrir el documento:\n{e}")
         else:
             messagebox.showerror("Error", "El archivo no existe en la ruta seleccionada.")
-    open_btn.config(command=lambda: abrir_doc_custom(ruta_var.get()))
+    open_btn.config(command=lambda: abrir_doc_custom(ruta_var.get()))    
+    # Crear la barra de progreso pero ocultarla inicialmente
     progress = ttk.Progressbar(frm, mode="indeterminate")
     progress.grid(row=4, column=0, columnspan=2, sticky="ew", pady=5)
+    progress.grid_remove()  # Oculta la barra al iniciar
+    progress['value'] = 0
+    progress.update_idletasks()
     status_label = ttk.Label(frm, text="", foreground="blue")
     status_label.grid(row=5, column=0, columnspan=2, pady=(0,5))
     success_label = ttk.Label(frm, text="", foreground="green")
     success_label.grid(row=8, column=0, columnspan=2, pady=(5,0))
-    ttk.Label(frm, text="Detalle de ejecución:").grid(row=5, column=0, columnspan=2, sticky=tk.W)
+    # Eliminar etiqueta duplicada y dejar solo una
     log_label = ttk.Label(frm, text="Detalle de ejecución:")
     log_label.grid(row=5, column=0, columnspan=2, sticky=tk.W)
     txt_log = ScrolledText(frm, height=15, width=100, state="disabled", bg="#ffffff", bd=0, highlightthickness=0)
@@ -82,7 +101,7 @@ def main():
         if txt_log.winfo_viewable():
             txt_log.grid_remove()
             ver_detalle_btn.config(text="Ver detalle")
-            root.geometry("600x220")
+            root.geometry("600x245")
         else:
             txt_log.grid(row=7, column=0, columnspan=2, sticky="nsew", pady=(0,10))
             ver_detalle_btn.config(text="Ocultar detalle")
@@ -104,6 +123,8 @@ def main():
             messagebox.showerror("Error", "Ingrese un número de funcionalidad válido.")
             return
         btn.config(state="disabled")
+        progress['value'] = 0
+        progress.grid()  # Mostrar la barra al iniciar acción
         progress.start()
         txt_log.configure(state="normal")
         txt_log.delete(1.0, tk.END)
@@ -111,13 +132,13 @@ def main():
         success_label.config(text="", foreground="green")
         open_btn.config(state="disabled")
         status_label.config(text="Generando Documento", foreground="blue")
-        root.geometry("600x220")
+        root.geometry("600x245")
         ruta_docx = ruta_var.get()
-        def limpiar_label():
-            success_label.config(text="")
         def task():
             run_script(num, ver_explorador_var.get(), log_queue, ruta_docx)
             progress.stop()
+            progress['value'] = 0
+            progress.grid_remove()  # Ocultar la barra al terminar
             btn.config(state="normal")
             log_content = ""
             try:
@@ -139,7 +160,7 @@ def main():
                 root.after(5000, lambda: status_label.config(text=""))
         threading.Thread(target=task, daemon=True).start()
     btn.config(command=on_run)
-    root.geometry("600x220")
+    root.geometry("600x235")
 
     def on_update():
         num = funcionalidad_var.get().strip()
@@ -158,6 +179,8 @@ def main():
         if not resp:
             return
         btn_update.config(state="disabled")
+        progress['value'] = 0
+        progress.grid()  # Mostrar la barra al iniciar acción
         progress.start()
         txt_log.configure(state="normal")
         txt_log.delete(1.0, tk.END)
@@ -165,7 +188,7 @@ def main():
         success_label.config(text="", foreground="green")
         open_btn.config(state="disabled")
         status_label.config(text="Actualizando Documento", foreground="blue")
-        root.geometry("600x220")
+        root.geometry("600x245")
         def task():
             options = Options()
             options.add_argument("--start-maximized")
@@ -184,6 +207,8 @@ def main():
             finally:
                 driver.quit()
                 progress.stop()
+                progress['value'] = 0
+                progress.grid_remove()  # Ocultar la barra al terminar
                 btn_update.config(state="normal")
                 log_content = ""
                 try:
@@ -211,5 +236,8 @@ def main():
         root.iconbitmap(icon_path)
     except Exception:
         pass  # Si falla, no rompe la app
+    # Label de versión más alto, justo después de ver detalle
+    version_label = ttk.Label(frm, text=f"Versión: {get_app_version()}", foreground="gray")
+    version_label.grid(row=8, column=0, columnspan=2, sticky=tk.E, pady=(2, 10))
 
     root.mainloop()

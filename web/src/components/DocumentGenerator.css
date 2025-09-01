@@ -1,0 +1,63 @@
+.document-generator {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.btn.generating {
+  position: relative;
+  color: transparent;
+}
+
+.btn.generating .loading-spinner {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  margin: 0;
+}
+
+.btn-secondary {
+  background-color: #6c757d;
+  color: white;
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background-color: #545b62;
+}
+
+.requirement-item {
+  transition: transform 0.2s;
+}
+
+.requirement-item:hover {
+  transform: translateY(-2px);
+}
+
+.logs-container {
+  font-family: 'Courier New', monospace;
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
+.log-entry {
+  padding: 0.3rem 0;
+  word-wrap: break-word;
+}
+
+/* Iconos en los logs */
+.log-entry:has-text("✅") {
+  color: #28a745;
+}
+
+.log-entry:has-text("❌") {
+  color: #dc3545;
+}
+
+.log-entry:has-text("⚠️") {
+  color: #ffc107;
+}
+
+.log-entry:has-text("🚀") {
+  color: #007bff;
+  font-weight: 600;
+}

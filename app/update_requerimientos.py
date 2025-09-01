@@ -1,4 +1,5 @@
 import os
+import copy
 from docx import Document
 from app.docx_helpers import insert_paragraph_after, is_empty_req_block, add_hyperlink
 from app.requerimientos import extraer_requerimiento
@@ -58,16 +59,29 @@ def update_requerimientos(numero_funcionalidad, docx_path, driver, log_queue):
             after_req_cliente = True
             continue
         if after_req_cliente:
-            if text.isdigit() and len(text) < 7:
-                nro = text
-                href = f"http://reportes03/reports/report/IyD/Gestion/Requerimiento?TipoRequerimiento=1&Numero={nro}"
-                requerimiento_nros.append(nro)
-                requerimiento_links.append(href)
-            elif text.isdigit() and len(text) >= 7:
-                continue
+            if text.isdigit():
+                # Filtrar por rango de números para distinguir requerimientos de incidentes
+                # Requerimientos típicos: 2-5 dígitos (99-99999)
+                # Incidentes típicos: 6+ dígitos (100000+)
+                num = int(text)
+                if 99 <= num <= 99999:  # Solo requerimientos en este rango
+                    nro = text
+                    href = f"http://reportes03/reports/report/IyD/Gestion/Requerimiento?TipoRequerimiento=1&Numero={nro}"
+                    requerimiento_nros.append(nro)
+                    requerimiento_links.append(href)
             elif text == "Req. Cliente":
                 continue
-    log(f"Requerimientos encontrados: {requerimiento_nros}")
+    log(f"Requerimientos encontrados:")
+    # Mostrar en dos columnas verticalmente alternadas
+    half = (len(requerimiento_nros) + 1) // 2  # Redondear hacia arriba
+    for i in range(half):
+        left = f"  {i+1}. {requerimiento_nros[i]}"
+        right_idx = i + half
+        if right_idx < len(requerimiento_nros):
+            right = f"  {right_idx+1}. {requerimiento_nros[right_idx]}"
+            log(f"{left:<25} {right}")
+        else:
+            log(left)
     log(f"Requerimientos existentes en el documento:")
     for idx, nro in enumerate(sorted(req_nros_en_doc), 1):
         log(f"  {idx}. {nro}")
@@ -80,28 +94,51 @@ def update_requerimientos(numero_funcionalidad, docx_path, driver, log_queue):
         log("Proceso finalizado.")
         return False
     # 1. Detectar el bloque de 'Funcionalidad nro.' y sus detalles
-    func_idx = None
+    func_start_idx = None
+    func_end_idx = None
+    
+    # Buscar el párrafo que contiene 'Funcionalidad nro.'
     for i, p in enumerate(document.paragraphs):
         if p.text.strip().lower().startswith('funcionalidad nro.'):
-            func_idx = i
+            func_start_idx = i
             break
-    if func_idx is not None:
+    
+    if func_start_idx is not None:
         # Encontrar el final del bloque de funcionalidad
-        end_func_idx = func_idx + 1
-        while end_func_idx < len(document.paragraphs):
-            t = document.paragraphs[end_func_idx].text.strip().lower()
+        func_end_idx = func_start_idx + 1
+        while func_end_idx < len(document.paragraphs):
+            t = document.paragraphs[func_end_idx].text.strip().lower()
             if t.startswith('requerimiento nro.'):
                 break
-            end_func_idx += 1
-        # Extraer el bloque de funcionalidad
-        func_block = document.paragraphs[func_idx:end_func_idx]
-        # Eliminar el bloque de funcionalidad del documento
-        for j in range(end_func_idx-1, func_idx-1, -1):
-            document.paragraphs[j]._element.getparent().remove(document.paragraphs[j]._element)
-        # Insertar los nuevos requerimientos donde estaba el bloque de funcionalidad
-        insert_after_paragraph = document.paragraphs[func_idx-1] if func_idx > 0 else None
+            func_end_idx += 1
+        
+        # Obtener el párrafo de inicio y fin del bloque
+        func_start_element = document.paragraphs[func_start_idx]._element
+        if func_end_idx < len(document.paragraphs):
+            func_end_element = document.paragraphs[func_end_idx]._element
+        else:
+            func_end_element = None
+        
+        # Extraer TODOS los elementos entre el inicio y fin (incluyendo tablas)
+        func_block_elements = []
+        current_element = func_start_element
+        
+        while current_element is not None:
+            func_block_elements.append(current_element)
+            if current_element == func_end_element:
+                break
+            current_element = current_element.getnext()
+            if current_element == func_end_element:
+                break
+        
+        # Eliminar los elementos del bloque de funcionalidad del documento
+        for element in func_block_elements:
+            element.getparent().remove(element)
+        
+        # Encontrar dónde insertar los nuevos requerimientos
+        insert_after_paragraph = document.paragraphs[func_start_idx-1] if func_start_idx > 0 else None
     else:
-        func_block = []
+        func_block_elements = []
         insert_after_paragraph = document.paragraphs[-1]
     # 2. Insertar los nuevos requerimientos
     last_p = insert_after_paragraph
@@ -131,10 +168,24 @@ def update_requerimientos(numero_funcionalidad, docx_path, driver, log_queue):
             p = insert_paragraph_after(p, f"Interacciones relacionadas: no hay", style="List Bullet")
         last_p = p
     # 3. Volver a insertar el bloque de funcionalidad después del último requerimiento
-    if func_block:
-        for para in func_block:
-            new_p = insert_paragraph_after(last_p, para.text, style=para.style.name if hasattr(para.style, 'name') else None)
-            last_p = new_p
+    if func_block_elements:
+        # Insertar los elementos XML preservados en orden (mantiene párrafos, tablas, imágenes, comentarios, etc.)
+        current_insert_point = last_p._element
+        
+        for element in func_block_elements:
+            # Hacer una copia profunda del elemento XML para preservar todo el contenido
+            cloned_element = copy.deepcopy(element)
+            # Insertar después del punto de inserción actual
+            current_insert_point.addnext(cloned_element)
+            # Actualizar el punto de inserción para el siguiente elemento
+            current_insert_point = cloned_element
+            
+            # Si el elemento clonado es un párrafo, actualizar last_p
+            if cloned_element.tag.endswith('}p'):  # Es un párrafo
+                for p in document.paragraphs:
+                    if p._element == cloned_element:
+                        last_p = p
+                        break
     document.save(docx_path)
     log(f"Documento actualizado con nuevos requerimientos: {nuevos_reqs}")
     log("Proceso finalizado.")
