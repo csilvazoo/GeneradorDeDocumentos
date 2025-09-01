@@ -7,15 +7,6 @@ const ProxyConfig = () => {
   const [isConnected, setIsConnected] = useState(false);
   const [isChecking, setIsChecking] = useState(false);
 
-  useEffect(() => {
-    // Verificar si ya hay una configuración guardada
-    const savedIP = localStorage.getItem('proxyIP');
-    if (savedIP) {
-      setProxyIP(savedIP);
-      checkConnection(savedIP);
-    }
-  }, [checkConnection]);
-
   const checkConnection = useCallback(async (ip) => {
     setIsChecking(true);
     try {
@@ -44,6 +35,15 @@ const ProxyConfig = () => {
       setIsChecking(false);
     }
   }, []);
+
+  useEffect(() => {
+    // Verificar si ya hay una configuración guardada
+    const savedIP = localStorage.getItem('proxyIP');
+    if (savedIP) {
+      setProxyIP(savedIP);
+      checkConnection(savedIP);
+    }
+  }, [checkConnection]);
 
   const handleConnect = async () => {
     if (!proxyIP.trim()) {
