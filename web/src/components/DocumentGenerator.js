@@ -37,10 +37,10 @@ const DocumentGenerator = () => {
 
     try {
       addLog('🚀 Iniciando proceso de generación...');
+      addLog('🔗 Conectando con servidor proxy en http://localhost:5000');
       
       // 1. Obtener datos de funcionalidad
       addLog('📊 Obteniendo datos de funcionalidad de la intranet...');
-      addLog(`🔗 Accediendo a: http://reportes03/reports/report/IyD/Gestion/Funcionalidad?Funcionalidad=${numeroFuncionalidad}`);
       const funcionalidadData = await fetchFuncionalidadData(numeroFuncionalidad);
       addLog('✅ Datos de funcionalidad obtenidos correctamente');
 
