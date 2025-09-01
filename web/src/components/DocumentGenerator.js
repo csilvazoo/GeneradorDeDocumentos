@@ -11,7 +11,6 @@ const DocumentGenerator = () => {
   const [logs, setLogs] = useState([]);
   const [requerimientos, setRequerimientos] = useState([]);
   const [error, setError] = useState('');
-  const [isProxyConfigured, setIsProxyConfigured] = useState(false);
 
   const addLog = (message) => {
     setLogs(prev => [...prev, `${new Date().toLocaleTimeString()}: ${message}`]);
@@ -140,7 +139,7 @@ const DocumentGenerator = () => {
 
   return (
     <div className="document-generator">
-      <ProxyConfig onConfigured={() => setIsProxyConfigured(true)} />
+      <ProxyConfig />
       
       <div className="card">
         <h2>🔧 Generar Nuevo Documento</h2>

@@ -7,41 +7,33 @@ const getProxyBaseUrl = () => {
     return 'http://localhost:5000/api';
   }
   
-  // Si estamos en Netlify, necesitamos la IP local de tu máquina
-  // Debes ejecutar el proxy con: python proxy_server.py
-  // Y buscar la IP que muestra: "Running on http://192.168.x.x:5000"
-  const localProxyIP = window.prompt(
-    '🔧 Para usar el generador desde Netlify, necesitas ejecutar el proxy localmente.\n\n' +
-    '1. Ejecuta: python proxy_server.py\n' +
-    '2. Busca la línea: "Running on http://192.168.x.x:5000"\n' +
-    '3. Ingresa esa IP (ej: 192.168.1.100):\n\n' +
-    'IP del proxy local:', 
-    '192.168.1.100'
-  );
-  
-  if (localProxyIP) {
-    localStorage.setItem('proxyIP', localProxyIP);
-    return `http://${localProxyIP}:5000/api`;
-  }
-  
-  // Fallback a IP guardada
+  // Si estamos en Netlify, usar IP guardada o localhost como fallback
   const savedIP = localStorage.getItem('proxyIP');
   if (savedIP) {
     return `http://${savedIP}:5000/api`;
   }
   
-  // Si no hay configuración, mostrar error
-  throw new Error('No se ha configurado la IP del proxy local. Recarga la página para configurar.');
+  // Fallback por defecto
+  return 'http://localhost:5000/api';
 };
 
 // URLs del servidor proxy
-let PROXY_BASE_URL;
-try {
-  PROXY_BASE_URL = getProxyBaseUrl();
-} catch (error) {
-  console.error('Error configurando proxy:', error);
-  PROXY_BASE_URL = 'http://localhost:5000/api'; // Fallback
-}
+let PROXY_BASE_URL = getProxyBaseUrl();
+
+/**
+ * Reconfigurar la URL del proxy (usado por ProxyConfig)
+ */
+export const setProxyBaseUrl = (newIP) => {
+  PROXY_BASE_URL = `http://${newIP}:5000/api`;
+  localStorage.setItem('proxyIP', newIP);
+};
+
+/**
+ * Obtener la URL actual del proxy
+ */
+export const getProxyUrl = () => {
+  return PROXY_BASE_URL;
+};
 
 /**
  * Realiza una petición HTTP con manejo de errores al servidor proxy
