@@ -45,15 +45,18 @@ export const fetchFuncionalidadData = async (numeroFuncionalidad) => {
   
   // En una implementación real, esto podría requerir múltiples requests
   // Para simplificar, asumimos que podemos hacer la petición directamente
-  const url = `${FUNCIONALIDAD_URL}?numero=${numeroFuncionalidad}`;
+  const url = `${FUNCIONALIDAD_URL}?Funcionalidad=${numeroFuncionalidad}`;
   
   try {
+    console.log(`Intentando acceder a: ${url}`);
     const htmlContent = await fetchWithErrorHandling(url);
     
     // Verificar si la respuesta contiene datos válidos
     if (!htmlContent || htmlContent.length < 100) {
       throw new Error('Respuesta vacía o inválida del servidor de intranet');
     }
+    
+    console.log(`Respuesta recibida, tamaño: ${htmlContent.length} caracteres`);
     
     // También extraer y retornar los datos estructurados
     const funcionalidadInfo = extractFuncionalidad(htmlContent, numeroFuncionalidad);
