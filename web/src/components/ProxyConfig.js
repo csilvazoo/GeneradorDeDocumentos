@@ -10,18 +10,35 @@ const ProxyConfig = () => {
   const checkConnection = useCallback(async (ip) => {
     setIsChecking(true);
     try {
-      const response = await fetch(`http://${ip}:5000/health`, {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' },
-        timeout: 5000
-      });
+      // Intentar primero HTTPS, luego HTTP como fallback
+      let response;
+      let url = `https://${ip}:5000/health`;
+      
+      try {
+        response = await fetch(url, {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' },
+          timeout: 5000
+        });
+      } catch (httpsError) {
+        console.log('HTTPS falló, intentando HTTP...', httpsError);
+        url = `http://${ip}:5000/health`;
+        response = await fetch(url, {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' },
+          timeout: 5000
+        });
+      }
       
       if (response.ok) {
         const data = await response.json();
         if (data.status === 'ok') {
           setIsConnected(true);
+          // Guardar el protocolo exitoso
+          const protocol = url.startsWith('https') ? 'https' : 'http';
           localStorage.setItem('proxyIP', ip);
-          setProxyBaseUrl(ip); // Actualizar la configuración global
+          localStorage.setItem('proxyProtocol', protocol);
+          setProxyBaseUrl(ip, protocol); // Actualizar la configuración global
           return true;
         }
       }
@@ -65,7 +82,7 @@ const ProxyConfig = () => {
       <div className="proxy-config connected">
         <div className="status-indicator">
           <span className="status-dot connected"></span>
-          <span>✅ Conectado al proxy en {proxyIP}:5000</span>
+          <span>✅ Conectado al proxy en {proxyIP}:5000 ({localStorage.getItem('proxyProtocol') || 'https'})</span>
           <button onClick={handleReset} className="btn-reset">🔄 Cambiar</button>
         </div>
       </div>
@@ -86,7 +103,7 @@ const ProxyConfig = () => {
             </div>
             <div className="step">
               <span className="step-number">2</span>
-              <span>Busca la línea: <code>"Running on http://192.168.x.x:5000"</code></span>
+              <span>Busca la línea: <code>"Running on https://192.168.x.x:5000"</code></span>
             </div>
             <div className="step">
               <span className="step-number">3</span>
@@ -113,7 +130,9 @@ const ProxyConfig = () => {
           </div>
 
           <div className="help-text">
-            <p>💡 <strong>Ejemplo:</strong> Si ves "Running on http://192.168.1.105:5000", ingresa: <code>192.168.1.105</code></p>
+            <p>💡 <strong>Ejemplo:</strong> Si ves "Running on https://192.168.1.105:5000", ingresa: <code>192.168.1.105</code></p>
+            <p>🔒 <strong>HTTPS:</strong> El proxy intentará HTTPS primero, HTTP como respaldo</p>
+            <p>⚠️ <strong>Certificado:</strong> Si aparece advertencia de seguridad, acepta el riesgo para continuar</p>
           </div>
         </div>
       </div>

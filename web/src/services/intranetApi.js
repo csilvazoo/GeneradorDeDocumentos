@@ -7,14 +7,16 @@ const getProxyBaseUrl = () => {
     return 'http://localhost:5000/api';
   }
   
-  // Si estamos en Netlify, usar IP guardada o localhost como fallback
+  // Si estamos en Netlify, usar IP y protocolo guardados
   const savedIP = localStorage.getItem('proxyIP');
+  const savedProtocol = localStorage.getItem('proxyProtocol') || 'https';
+  
   if (savedIP) {
-    return `http://${savedIP}:5000/api`;
+    return `${savedProtocol}://${savedIP}:5000/api`;
   }
   
-  // Fallback por defecto
-  return 'http://localhost:5000/api';
+  // Fallback por defecto (intentar HTTPS primero)
+  return 'https://localhost:5000/api';
 };
 
 // URLs del servidor proxy
@@ -23,9 +25,10 @@ let PROXY_BASE_URL = getProxyBaseUrl();
 /**
  * Reconfigurar la URL del proxy (usado por ProxyConfig)
  */
-export const setProxyBaseUrl = (newIP) => {
-  PROXY_BASE_URL = `http://${newIP}:5000/api`;
+export const setProxyBaseUrl = (newIP, protocol = 'https') => {
+  PROXY_BASE_URL = `${protocol}://${newIP}:5000/api`;
   localStorage.setItem('proxyIP', newIP);
+  localStorage.setItem('proxyProtocol', protocol);
 };
 
 /**

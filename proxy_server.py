@@ -12,6 +12,7 @@ from urllib.parse import urljoin
 import logging
 import sys
 import os
+import ssl
 
 # Configurar logging
 logging.basicConfig(level=logging.INFO)
@@ -161,20 +162,31 @@ if __name__ == '__main__':
     port = 5000
     
     print(f"""
-🚀 Servidor Proxy iniciado en: http://localhost:{port}
+🚀 Servidor Proxy iniciado en: https://localhost:{port} (HTTPS)
 📋 Endpoints disponibles:
    • GET /health - Verificar estado del servidor
    • GET /api/funcionalidad/<numero> - Obtener datos de funcionalidad
    • GET /api/requerimiento/<numero> - Obtener datos de requerimiento
 
 🔐 Autenticación: Automática (usando credenciales de Windows)
-💡 Para usar con la aplicación web, configura la URL base como: http://localhost:{port}
+� HTTPS: Habilitado (certificado auto-firmado)
+�💡 Para usar con la aplicación web, configura la URL base como: https://localhost:{port}
+
+⚠️  IMPORTANTE: Si ves advertencia de certificado en el navegador, acepta el riesgo para continuar.
 """)
     
     try:
-        app.run(host='0.0.0.0', port=port, debug=True)
-    except KeyboardInterrupt:
-        print("\n👋 Servidor detenido por el usuario")
+        # Crear contexto SSL adhoc (certificado auto-firmado)
+        context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
+        context.check_hostname = False
+        context.verify_mode = ssl.CERT_NONE
+        
+        app.run(host='0.0.0.0', port=port, debug=True, ssl_context='adhoc')
     except Exception as e:
-        print(f"❌ Error al iniciar el servidor: {e}")
-        sys.exit(1)
+        print(f"❌ Error al iniciar el servidor HTTPS: {e}")
+        print("💡 Intentando con HTTP como fallback...")
+        try:
+            app.run(host='0.0.0.0', port=port, debug=True)
+        except Exception as e2:
+            print(f"❌ Error al iniciar el servidor: {e2}")
+            sys.exit(1)
