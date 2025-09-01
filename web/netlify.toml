@@ -1,0 +1,12 @@
+[build]
+  publish = "build"
+  command = "npm run build"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+[build.environment]
+  REACT_APP_VERSION = "2.0.0"
+  REACT_APP_NAME = "Generador de Documentos Funcionales - Web"
