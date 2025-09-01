@@ -1,36 +1,37 @@
 import { extractFuncionalidad, extractRequerimientoDetalles } from '../utils/dataExtractor';
 
-// URLs base de la intranet (igual que en tu versión Python)
-const BASE_URL = 'http://reportes03/reports/report/IyD/Gestion';
-const FUNCIONALIDAD_URL = `${BASE_URL}/Funcionalidad`;
-const REQUERIMIENTO_URL = `${BASE_URL}/Requerimiento`;
+// URLs del servidor proxy
+const PROXY_BASE_URL = 'http://localhost:5000/api';
 
 /**
- * Realiza una petición HTTP con manejo de errores
+ * Realiza una petición HTTP con manejo de errores al servidor proxy
  */
 const fetchWithErrorHandling = async (url, options = {}) => {
   try {
     const response = await fetch(url, {
       ...options,
-      mode: 'cors', // Permitir CORS para intranet
-      credentials: 'include' // Incluir cookies de sesión si es necesario
+      headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+      }
     });
     
     if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
     }
     
-    return await response.text();
+    return await response.json();
   } catch (error) {
     if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
-      throw new Error(`No se puede conectar con la intranet (${url}). Verifica que estés en la red corporativa.`);
+      throw new Error(`No se puede conectar con el servidor proxy (${url}). Verifica que el servidor proxy esté ejecutándose en http://localhost:5000`);
     }
     throw error;
   }
 };
 
 /**
- * Obtiene los datos de funcionalidad desde la intranet
+ * Obtiene los datos de funcionalidad desde la intranet a través del proxy
  * Equivalente a la navegación en logic.py
  */
 export const fetchFuncionalidadData = async (numeroFuncionalidad) => {
@@ -38,25 +39,25 @@ export const fetchFuncionalidadData = async (numeroFuncionalidad) => {
     throw new Error('Número de funcionalidad inválido. Debe ser numérico.');
   }
   
-  // Simular el proceso que hace Selenium:
-  // 1. Cargar página principal
-  // 2. Llenar input con número de funcionalidad
-  // 3. Hacer clic en "Ver informe"
-  
-  // En una implementación real, esto podría requerir múltiples requests
-  // Para simplificar, asumimos que podemos hacer la petición directamente
-  const url = `${FUNCIONALIDAD_URL}?Funcionalidad=${numeroFuncionalidad}`;
+  const url = `${PROXY_BASE_URL}/funcionalidad/${numeroFuncionalidad}`;
   
   try {
-    console.log(`Intentando acceder a: ${url}`);
-    const htmlContent = await fetchWithErrorHandling(url);
+    console.log(`Accediendo al proxy: ${url}`);
+    const response = await fetchWithErrorHandling(url);
+    
+    if (!response.success) {
+      throw new Error(response.error || 'Respuesta inválida del servidor proxy');
+    }
+    
+    const htmlContent = response.html;
     
     // Verificar si la respuesta contiene datos válidos
     if (!htmlContent || htmlContent.length < 100) {
       throw new Error('Respuesta vacía o inválida del servidor de intranet');
     }
     
-    console.log(`Respuesta recibida, tamaño: ${htmlContent.length} caracteres`);
+    console.log(`Respuesta recibida del proxy, tamaño: ${response.size} caracteres`);
+    console.log(`URL original accedida: ${response.url}`);
     
     // También extraer y retornar los datos estructurados
     const funcionalidadInfo = extractFuncionalidad(htmlContent, numeroFuncionalidad);
@@ -73,7 +74,7 @@ export const fetchFuncionalidadData = async (numeroFuncionalidad) => {
 };
 
 /**
- * Obtiene los datos de un requerimiento específico
+ * Obtiene los datos de un requerimiento específico a través del proxy
  * Equivalente a extraer_requerimiento en requerimientos.py
  */
 export const fetchRequerimientoData = async (numeroRequerimiento) => {
@@ -81,14 +82,23 @@ export const fetchRequerimientoData = async (numeroRequerimiento) => {
     throw new Error('Número de requerimiento inválido');
   }
   
-  const url = `${REQUERIMIENTO_URL}?TipoRequerimiento=1&Numero=${numeroRequerimiento}`;
+  const url = `${PROXY_BASE_URL}/requerimiento/${numeroRequerimiento}`;
   
   try {
-    const htmlContent = await fetchWithErrorHandling(url);
+    console.log(`Accediendo al proxy para requerimiento: ${url}`);
+    const response = await fetchWithErrorHandling(url);
+    
+    if (!response.success) {
+      throw new Error(response.error || 'Respuesta inválida del servidor proxy');
+    }
+    
+    const htmlContent = response.html;
     
     if (!htmlContent || htmlContent.length < 100) {
       throw new Error('Respuesta vacía del servidor');
     }
+    
+    console.log(`Requerimiento obtenido: ${response.size} caracteres`);
     
     // Extraer datos estructurados del HTML
     const detalles = extractRequerimientoDetalles(htmlContent);
@@ -102,18 +112,15 @@ export const fetchRequerimientoData = async (numeroRequerimiento) => {
 };
 
 /**
- * Valida si se puede conectar con la intranet
+ * Valida si se puede conectar con el servidor proxy
  * Útil para verificar conectividad antes de procesar
  */
 export const testIntranetConnection = async () => {
   try {
-    await fetchWithErrorHandling(FUNCIONALIDAD_URL, {
-      method: 'HEAD', // Solo verificar cabeceras
-      timeout: 5000
-    });
-    return true;
+    const response = await fetchWithErrorHandling(`${PROXY_BASE_URL}/../health`);
+    return response.status === 'ok';
   } catch (error) {
-    console.warn('No se puede conectar con la intranet:', error.message);
+    console.warn('No se puede conectar con el servidor proxy:', error.message);
     return false;
   }
 };
