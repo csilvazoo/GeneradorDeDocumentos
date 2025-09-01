@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { setProxyBaseUrl } from '../services/intranetApi';
 import './ProxyConfig.css';
 
-const ProxyConfig = ({ onConfigured }) => {
+const ProxyConfig = () => {
   const [proxyIP, setProxyIP] = useState('');
   const [isConnected, setIsConnected] = useState(false);
   const [isChecking, setIsChecking] = useState(false);
@@ -13,9 +14,9 @@ const ProxyConfig = ({ onConfigured }) => {
       setProxyIP(savedIP);
       checkConnection(savedIP);
     }
-  }, []);
+  }, [checkConnection]);
 
-  const checkConnection = async (ip) => {
+  const checkConnection = useCallback(async (ip) => {
     setIsChecking(true);
     try {
       const response = await fetch(`http://${ip}:5000/health`, {
@@ -29,7 +30,7 @@ const ProxyConfig = ({ onConfigured }) => {
         if (data.status === 'ok') {
           setIsConnected(true);
           localStorage.setItem('proxyIP', ip);
-          if (onConfigured) onConfigured();
+          setProxyBaseUrl(ip); // Actualizar la configuración global
           return true;
         }
       }
@@ -42,7 +43,7 @@ const ProxyConfig = ({ onConfigured }) => {
     } finally {
       setIsChecking(false);
     }
-  };
+  }, []);
 
   const handleConnect = async () => {
     if (!proxyIP.trim()) {
